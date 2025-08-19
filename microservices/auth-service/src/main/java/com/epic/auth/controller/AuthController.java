@@ -41,11 +41,11 @@ public class AuthController {
      * Recebe email e password, valida as credenciais e retorna um token JWT caso sejam válidas.
      * </p>
      *
-     * @param request objeto {@link LoginRequest} que contém o email e a password do utilizador.
+     * @param request objeto {@link LoginRequestDto} que contém o email e a password do utilizador.
      * @return {@link ResponseEntity} contem o token JWT gerado.
      */
     @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<String> login(@RequestBody LoginRequestDto request) {
         return ResponseEntity.ok(authService.login(request.getEmail(), request.getPassword()));
     }
 
@@ -55,11 +55,11 @@ public class AuthController {
      * Recebe os dados do utilizador e senha, cria o utilizador e retorna a entidade criada.
      * </p>
      *
-     * @param request objeto {@link RegisterRequest} que contem as informações do utilizador a ser registado.
+     * @param request objeto {@link RegisterRequestDto} que contem as informações do utilizador a ser registado.
      * @return {@link ResponseEntity} contem o {@link User} criado.
      */
     @PostMapping("/register")
-    public ResponseEntity<User> register(@RequestBody RegisterRequest request) {
+    public ResponseEntity<User> register(@RequestBody RegisterRequestDto request) {
         UserDto dto = UserDto.builder()
                 .roleId(request.getRoleId())
                 .email(request.getEmail())

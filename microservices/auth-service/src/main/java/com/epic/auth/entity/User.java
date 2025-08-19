@@ -1,9 +1,6 @@
 package com.epic.auth.entity;
 
 import com.epic.finance.entity.Account;
-import com.epic.finance.entity.Budget;
-import com.epic.finance.entity.Category;
-import com.epic.finance.entity.Transaction;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -39,6 +36,11 @@ public class User {
     @ColumnDefault("gen_random_uuid()")
     @Column(name = "id", nullable = false)
     private UUID id;
+
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "role_id", nullable = false)
+    private Role role;
 
     @Size(max = 255)
     @NotNull

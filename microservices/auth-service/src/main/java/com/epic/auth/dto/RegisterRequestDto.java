@@ -15,7 +15,7 @@ import java.util.UUID;
  * {@code @Diogo Bernardes}
  */
 @Data
-public class RegisterRequest {
+public class RegisterRequestDto {
     private UUID roleId;
     private String email;
     private String password;

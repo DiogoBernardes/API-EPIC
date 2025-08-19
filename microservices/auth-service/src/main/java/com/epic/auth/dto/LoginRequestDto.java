@@ -13,7 +13,7 @@ import lombok.Data;
  * {@code @Diogo Bernardes}
  */
 @Data
-public class LoginRequest {
+public class LoginRequestDto {
     private String email;
     private String password;
 }

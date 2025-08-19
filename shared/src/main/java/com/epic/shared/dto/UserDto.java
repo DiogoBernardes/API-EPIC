@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 /**
- * DTO (Data Transfer Object) que representa as informações de um utilizador
+ * DTO que representa as informações de um utilizador
  * utilizadas para transferência de dados entre serviços e camadas da aplicação.
  * <p>
  * É usado para abstrair a entidade {@link com.epic.auth.entity.User} quando não
