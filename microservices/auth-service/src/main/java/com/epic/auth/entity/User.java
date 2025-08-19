@@ -1,9 +1,18 @@
 package com.epic.auth.entity;
 
+import com.epic.finance.entity.Account;
+import com.epic.finance.entity.Budget;
+import com.epic.finance.entity.Category;
+import com.epic.finance.entity.Transaction;
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
+import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -21,59 +30,62 @@ import java.util.UUID;
  * {@code @Diogo Bernardes}
  */
 
-@Entity
-@Table(name = "users")
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Entity
+@Table(name = "users")
 public class User {
-
     @Id
-    @GeneratedValue
+    @ColumnDefault("gen_random_uuid()")
+    @Column(name = "id", nullable = false)
     private UUID id;
 
-    @Column(name = "role_id", nullable = false)
-    private UUID roleId;
-
-    @Column(nullable = false, unique = true, length = 255)
+    @Size(max = 255)
+    @NotNull
+    @Column(name = "email", nullable = false)
     private String email;
 
-    @Column(nullable = false, length = 255)
+    @Size(max = 255)
+    @NotNull
+    @Column(name = "password", nullable = false)
     private String password;
 
+    @Size(max = 100)
+    @NotNull
     @Column(name = "first_name", nullable = false, length = 100)
     private String firstName;
 
+    @Size(max = 100)
+    @NotNull
     @Column(name = "last_name", nullable = false, length = 100)
     private String lastName;
 
-    @Column(nullable = false)
+    @NotNull
+    @Column(name = "birthdate", nullable = false)
     private LocalDate birthdate;
 
-    @Column(nullable = false, length = 100)
+    @Size(max = 100)
+    @NotNull
+    @Column(name = "country", nullable = false, length = 100)
     private String country;
 
-    @Column(nullable = false, length = 50)
-    private String status; // "Active" or "Inactive"
+    @Size(max = 50)
+    @NotNull
+    @Column(name = "status", nullable = false, length = 50)
+    private String status;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
+    @NotNull
+    @ColumnDefault("CURRENT_TIMESTAMP")
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private Instant updatedAt;
 
     @Column(name = "removed_at")
-    private LocalDateTime removedAt;
+    private Instant removedAt;
 
-    @PrePersist
-    public void prePersist() {
-        createdAt = LocalDateTime.now();
-    }
+    @OneToMany(mappedBy = "user")
+    private Set<Account> accounts = new LinkedHashSet<>();
 
-    @PreUpdate
-    public void preUpdate() {
-        updatedAt = LocalDateTime.now();
-    }
 }
