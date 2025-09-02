@@ -1,32 +1,26 @@
 package com.epic.shared.dto;
 
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
 import java.util.UUID;
 
 /**
- * DTO que representa as informações de um utilizador
- * utilizadas para transferência de dados entre serviços e camadas da aplicação.
+ * DTO que transporta informações de um utilizador.
  * <p>
- * É usado para abstrair a entidade {@link com.epic.auth.entity.User} quando não
- * é necessário expor todos os detalhes internos, como a password ou dados sensíveis.
+ * Inclui dados básicos de perfil, credenciais e status da conta.
  * </p>
- *
- * <ul>
- *     <li>Transporta informações básicas de identificação e perfil do utilizador.</li>
- *     <li>Inclui status para indicar se a conta está ativa ou inativa.</li>
- *     <li>Pode ser utilizado tanto para autenticação quanto para comunicação entre microserviços.</li>
- * </ul>
  *
  * {@code @Diogo Bernardes}
  */
 
-@Getter
-@Setter
+@Builder
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
 public class UserDto {
 
     private UUID id;
@@ -35,7 +29,8 @@ public class UserDto {
     private String firstName;
     private String lastName;
     private LocalDate birthDate;
+    private String password;
     private String country;
     private String status;
-
 }
+

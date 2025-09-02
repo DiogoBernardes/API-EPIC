@@ -13,7 +13,6 @@
 
     <groupId>com.epic.auth</groupId>
     <artifactId>auth-service</artifactId>
-    <version>0.0.1</version>
     <packaging>jar</packaging>
 
     <dependencies>
@@ -74,19 +73,21 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>com.epic.shared</groupId>
             <artifactId>shared</artifactId>
-            <version>0.0.1</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>com.epic.finance</groupId>
-            <artifactId>finance-service</artifactId>
-            <version>0.0.1</version>
-            <scope>compile</scope>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
         </dependency>
     </dependencies>
 
@@ -95,6 +96,14 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>16</source>
+                    <target>16</target>
+                </configuration>
             </plugin>
         </plugins>
     </build>

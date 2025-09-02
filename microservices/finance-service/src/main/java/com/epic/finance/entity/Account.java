@@ -1,13 +1,10 @@
 package com.epic.finance.entity;
 
-import com.epic.auth.entity.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -34,15 +31,13 @@ import java.util.UUID;
 @Table(name = "accounts")
 public class Account {
     @Id
-    @ColumnDefault("gen_random_uuid()")
+    @GeneratedValue(generator = "UUID")
     @Column(name = "id", nullable = false)
     private UUID id;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
 
     @Size(max = 100)
     @NotNull
@@ -53,13 +48,11 @@ public class Account {
     @Column(name = "balance", precision = 18, scale = 2)
     private BigDecimal balance;
 
-    @Size(max = 50)
     @NotNull
     @Column(name = "status", nullable = false, length = 50)
     private String status;
 
     @NotNull
-    @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -68,5 +61,15 @@ public class Account {
 
     @Column(name = "removed_at")
     private Instant removedAt;
+
+    @PrePersist
+    public void prePersist() {
+        createdAt = Instant.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = Instant.now();
+    }
 
 }

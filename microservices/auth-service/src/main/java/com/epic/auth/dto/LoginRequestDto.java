@@ -3,11 +3,10 @@ package com.epic.auth.dto;
 import lombok.Data;
 
 /**
- * DTO utilizado para receber os dados necessários
- * para o login do utilizador.
+ * DTO para requisições de login.
  * <p>
- * Este objeto é enviado pelo cliente para o endpoint
- * <code>/auth/login</code>.
+ * Contém as credenciais (email e password) enviadas pelo cliente
+ * para o endpoint <code>/auth/login</code>.
  * </p>
  *
  * {@code @Diogo Bernardes}

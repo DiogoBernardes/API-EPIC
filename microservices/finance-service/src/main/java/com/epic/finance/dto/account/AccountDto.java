@@ -1,6 +1,12 @@
 package com.epic.finance.dto.account;
 
+import com.epic.shared.dto.UserInfoDto;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
 import java.util.UUID;
 
 /**
@@ -12,11 +18,15 @@ import java.util.UUID;
  * {@code @Diogo Bernardes}
  */
 
+
+@Builder
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class AccountDto {
     private UUID id;
-    private UUID userId;
+    private UserInfoDto user;
     private String name;
-    private Double balance;
+    private BigDecimal balance;
     private String status;
 }

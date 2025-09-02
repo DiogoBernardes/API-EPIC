@@ -22,16 +22,19 @@
 
     <properties>
         <java.version>17</java.version>
-        <spring-boot.version>3.5.1</spring-boot.version>
+        <spring-boot.version>3.3.4</spring-boot.version>
+        <spring-cloud-openfeign.version>4.1.3</spring-cloud-openfeign.version>
         <jjwt.version>0.11.5</jjwt.version>
         <springdoc.version>2.6.0</springdoc.version>
         <postgresql.version>42.7.3</postgresql.version>
         <lombok.version>1.18.26</lombok.version>
         <hibernate-types.version>2.21.1</hibernate-types.version>
+        <spring-cloud.version>2023.0.3</spring-cloud.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- Spring Boot -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-dependencies</artifactId>
@@ -39,11 +42,28 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+
+            <!-- Spring Cloud BOM -->
             <dependency>
-                <groupId>org.projectlombok</groupId>
-                <artifactId>lombok</artifactId>
-                <version>${lombok.version}</version>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>${spring-cloud.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
             </dependency>
+
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.springdoc</groupId>
+                <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+                <version>${springdoc.version}</version>
+            </dependency>
+
+            <!-- Common Dependencies -->
             <dependency>
                 <groupId>io.jsonwebtoken</groupId>
                 <artifactId>jjwt-api</artifactId>
@@ -59,20 +79,60 @@
                 <artifactId>jjwt-jackson</artifactId>
                 <version>${jjwt.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>org.postgresql</groupId>
                 <artifactId>postgresql</artifactId>
                 <version>${postgresql.version}</version>
             </dependency>
+
             <dependency>
-                <groupId>org.springdoc</groupId>
-                <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-                <version>${springdoc.version}</version>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>${lombok.version}</version>
             </dependency>
+
             <dependency>
                 <groupId>com.vladmihalcea</groupId>
                 <artifactId>hibernate-types-60</artifactId>
                 <version>${hibernate-types.version}</version>
+            </dependency>
+
+            <!-- Modules -->
+            <dependency>
+                <groupId>com.epic.shared</groupId>
+                <artifactId>shared</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.epic.api_gateway</groupId>
+                <artifactId>api-gateway-service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.epic.auth</groupId>
+                <artifactId>auth-service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.epic.finance</groupId>
+                <artifactId>finance-service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.epic.ai</groupId>
+                <artifactId>ai-service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.epic.planner</groupId>
+                <artifactId>planner-service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.epic.report</groupId>
+                <artifactId>report-service</artifactId>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

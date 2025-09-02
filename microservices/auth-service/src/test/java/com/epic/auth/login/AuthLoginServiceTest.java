@@ -1,9 +1,11 @@
 package com.epic.auth.login;
 
+import com.epic.auth.entity.Role;
 import com.epic.auth.entity.User;
+import com.epic.shared.dto.UserInfoDto;
+import com.epic.shared.enums.CommonStatus;
 import com.epic.auth.repository.UserRepository;
 import com.epic.auth.service.AuthService;
-import com.epic.shared.dto.UserDto;
 import com.epic.shared.exception.UserInactiveException;
 import com.epic.shared.security.JwtUtil;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,12 +42,17 @@ class AuthLoginServiceTest {
 
     @BeforeEach
     void setup() {
+
+        Role role = new Role();
+        role.setId(UUID.fromString("433ed5bb-2766-423d-b445-3ad17a3411a7"));
+        role.setRoleName("User");
+
         activeUser = new User();
         activeUser.setId(UUID.randomUUID());
         activeUser.setEmail("active@test.com");
         activeUser.setPassword("encodedPassword");
-        activeUser.setStatus("Active");
-        activeUser.setRoleId(UUID.randomUUID());
+        activeUser.setStatus(CommonStatus.Active);
+        activeUser.setRole(role);
         activeUser.setFirstName("Active");
         activeUser.setLastName("User");
         activeUser.setBirthdate(LocalDate.of(2000, 1, 1));
@@ -55,19 +62,19 @@ class AuthLoginServiceTest {
         inactiveUser.setId(UUID.randomUUID());
         inactiveUser.setEmail("inactive@test.com");
         inactiveUser.setPassword("encodedPassword");
-        inactiveUser.setStatus("Inactive");
+        inactiveUser.setStatus(CommonStatus.Inactive);
     }
 
     @Test
     void loginSuccessful() {
         when(userRepository.findByEmail("active@test.com")).thenReturn(Optional.of(activeUser));
         when(passwordEncoder.matches("rawPassword", "encodedPassword")).thenReturn(true);
-        when(jwtUtil.generateToken(any(UserDto.class))).thenReturn("token123");
+        when(jwtUtil.generateToken(any(UserInfoDto.class))).thenReturn("token123");
 
         String token = authService.login("active@test.com", "rawPassword");
 
         assertEquals("token123", token);
-        verify(jwtUtil, times(1)).generateToken(any(UserDto.class));
+        verify(jwtUtil, times(1)).generateToken(any(UserInfoDto.class));
     }
 
     @Test

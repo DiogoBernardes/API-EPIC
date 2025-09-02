@@ -1,9 +1,11 @@
 package com.epic.auth.register;
 
+import com.epic.auth.entity.Role;
 import com.epic.auth.entity.User;
+import com.epic.shared.dto.UserInfoDto;
+import com.epic.shared.enums.CommonStatus;
 import com.epic.auth.repository.UserRepository;
 import com.epic.auth.service.AuthService;
-import com.epic.shared.dto.UserDto;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -36,12 +38,16 @@ class AuthRegisterServiceTest {
 
     @BeforeEach
     void setup() {
+        Role role = new Role();
+        role.setId(UUID.fromString("433ed5bb-2766-423d-b445-3ad17a3411a7"));
+        role.setRoleName("User");
+
         activeUser = new User();
         activeUser.setId(UUID.randomUUID());
         activeUser.setEmail("active@test.com");
         activeUser.setPassword("encodedPassword");
-        activeUser.setStatus("Active");
-        activeUser.setRoleId(UUID.randomUUID());
+        activeUser.setStatus(CommonStatus.Active);
+        activeUser.setRole(role);
         activeUser.setFirstName("Active");
         activeUser.setLastName("User");
         activeUser.setBirthdate(LocalDate.of(1990, 1, 1));
@@ -50,7 +56,7 @@ class AuthRegisterServiceTest {
 
     @Test
     void registerSuccessful() {
-        UserDto dto = UserDto.builder()
+        UserInfoDto dto = UserInfoDto.builder()
                 .email("newuser@test.com")
                 .firstName("New")
                 .lastName("User")
@@ -70,14 +76,14 @@ class AuthRegisterServiceTest {
         assertEquals("New", savedUser.getFirstName());
         assertEquals("User", savedUser.getLastName());
         assertEquals("Portugal", savedUser.getCountry());
-        assertNotNull(savedUser.getRoleId());
+        assertNotNull(savedUser.getRole().getId());
 
         verify(userRepository, times(1)).save(any(User.class));
     }
 
     @Test
     void registerWithExistingEmailThrowsException() {
-        UserDto dto = UserDto.builder()
+        UserInfoDto dto = UserInfoDto.builder()
                 .email("active@test.com")
                 .build();
 

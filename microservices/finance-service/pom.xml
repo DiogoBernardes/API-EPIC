@@ -13,8 +13,17 @@
 
     <groupId>com.epic.finance</groupId>
     <artifactId>finance-service</artifactId>
-    <version>0.0.1</version>
     <packaging>jar</packaging>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.hibernate.orm</groupId>
+                <artifactId>hibernate-core</artifactId>
+                <version>6.3.1.Final</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <!-- Spring Boot Web -->
@@ -29,6 +38,24 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
+        <!-- Spring Security -->
+        <dependency>
+            <groupId>org.springframework.security</groupId>
+            <artifactId>spring-security-core</artifactId>
+        </dependency>
+
+        <!-- Spring Cloud -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+
+        <!-- Swagger/OpenAPI -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        </dependency>
+
         <!-- PostgreSQL Driver -->
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -39,6 +66,11 @@
         <dependency>
             <groupId>com.vladmihalcea</groupId>
             <artifactId>hibernate-types-60</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-core</artifactId>
         </dependency>
 
         <!-- JWT -->
@@ -57,12 +89,6 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- Swagger/OpenAPI -->
-        <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-        </dependency>
-
         <!-- Testes -->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -77,20 +103,13 @@
             <scope>provided</scope>
         </dependency>
 
-        <!-- Microservices -->
+        <!-- Shared Microservice -->
         <dependency>
             <groupId>com.epic.shared</groupId>
             <artifactId>shared</artifactId>
-            <version>0.0.1</version>
             <scope>compile</scope>
         </dependency>
 
-        <dependency>
-            <groupId>com.epic.auth</groupId>
-            <artifactId>auth-service</artifactId>
-            <version>0.0.1</version>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
 
     <build>
@@ -98,6 +117,14 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>16</source>
+                    <target>16</target>
+                </configuration>
             </plugin>
         </plugins>
     </build>

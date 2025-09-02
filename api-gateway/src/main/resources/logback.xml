@@ -11,8 +11,7 @@
     <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>logs/api-gateway.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-            <!-- arquivo roda diariamente -->
-            <fileNamePattern>logs/api-gateway.%d{yyyy-MM-dd}.log</fileNamePattern>
+            <fileNamePattern>logs/api-logs.%d{yyyy-MM-dd}.log</fileNamePattern>
             <maxHistory>30</maxHistory> <!-- manter logs dos últimos 30 dias -->
         </rollingPolicy>
         <encoder>
@@ -26,10 +25,18 @@
         <appender-ref ref="FILE" />
     </root>
 
-
     <logger name="com.epic.api_gateway" level="DEBUG" additivity="false">
         <appender-ref ref="STDOUT" />
         <appender-ref ref="FILE" />
     </logger>
 
+    <logger name="com.epic.auth" level="DEBUG" additivity="false">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </logger>
+
+    <logger name="com.epic.finance" level="DEBUG" additivity="false">
+        <appender-ref ref="STDOUT" />
+        <appender-ref ref="FILE" />
+    </logger>
 </configuration>

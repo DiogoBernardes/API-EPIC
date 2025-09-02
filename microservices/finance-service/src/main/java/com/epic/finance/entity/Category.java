@@ -1,15 +1,9 @@
 package com.epic.finance.entity;
 
-import com.epic.auth.entity.User;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
 import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -34,29 +28,31 @@ import java.util.UUID;
 @Entity
 @Table(name = "categories")
 public class Category {
+
     @Id
-    @ColumnDefault("gen_random_uuid()")
+    @GeneratedValue(generator = "UUID")
     @Column(name = "id", nullable = false)
     private UUID id;
 
     @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "user_id", nullable = false)
-    private User user; //Desta forma damos possibilidade ao utilizador de criar as suas próprias categorias
+    private UUID userId;
 
-    @Size(max = 100)
     @NotNull
     @Column(name = "name", nullable = false, length = 100)
     private String name;
 
-    @Size(max = 50)
     @NotNull
     @Column(name = "type", nullable = false, length = 50)
     private String type;
 
+    @OneToMany(mappedBy = "category")
+    private Set<Budget> budgets = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "category")
+    private Set<Transaction> transactions = new LinkedHashSet<>();
+
     @NotNull
-    @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -66,10 +62,13 @@ public class Category {
     @Column(name = "removed_at")
     private Instant removedAt;
 
-    @OneToMany(mappedBy = "category")
-    private Set<Budget> budgets = new LinkedHashSet<>();
+    @PrePersist
+    public void prePersist() {
+        createdAt = Instant.now();
+    }
 
-    @OneToMany(mappedBy = "category")
-    private Set<Transaction> transactions = new LinkedHashSet<>();
-
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = Instant.now();
+    }
 }

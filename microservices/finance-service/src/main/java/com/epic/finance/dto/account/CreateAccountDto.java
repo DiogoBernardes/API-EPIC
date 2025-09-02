@@ -1,7 +1,10 @@
 package com.epic.finance.dto.account;
 
-import jakarta.validation.constraints.Pattern;
-import java.util.UUID;
+import com.epic.shared.enums.CommonStatus;
+import lombok.Data;
+
+import java.math.BigDecimal;
+
 
 /**
  * DTO utilizado para receber os dados necessários
@@ -13,10 +16,9 @@ import java.util.UUID;
  *
  * {@code @Diogo Bernardes}
  */
+@Data
 public class CreateAccountDto {
-    private UUID userId;
     private String name;
-    private Double balance = 0.0;
-    @Pattern(regexp = "Active|Inactive", message = "Status must be Active or Inactive")
-    private String status;
+    private BigDecimal balance = BigDecimal.valueOf(0.0);
+    private CommonStatus status;
 }

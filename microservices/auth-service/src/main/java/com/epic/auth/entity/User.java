@@ -1,6 +1,6 @@
 package com.epic.auth.entity;
 
-import com.epic.finance.entity.Account;
+import com.epic.shared.enums.CommonStatus;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -8,20 +8,19 @@ import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
 import java.time.Instant;
 import java.time.LocalDate;
-import java.util.LinkedHashSet;
-import java.util.Set;
 import java.util.UUID;
 
 /**
  * Entidade que representa um utilizador no sistema.
  * <p>
- * Mapeada para a tabela <code>users</code> na base de dados.
+ * Mapeada para a tabela <code>users</code>.
  * </p>
  *
+ * <p>Principais responsabilidades:</p>
  * <ul>
- *     <li>Armazena informações de autenticação e perfil do utilizador.</li>
- *     <li>Controla metadados de criação, atualização e remoção lógica.</li>
- *     <li>Inclui status para indicar se a conta está ativa ou inativa.</li>
+ *   <li>Armazena credenciais e dados de perfil.</li>
+ *   <li>Regista metadados de criação, atualização e remoção lógica.</li>
+ *   <li>Controla o estado da conta (ativa/inativa).</li>
  * </ul>
  *
  * {@code @Diogo Bernardes}
@@ -33,7 +32,7 @@ import java.util.UUID;
 @Table(name = "users")
 public class User {
     @Id
-    @ColumnDefault("gen_random_uuid()")
+    @GeneratedValue(generator = "UUID")
     @Column(name = "id", nullable = false)
     private UUID id;
 
@@ -71,10 +70,10 @@ public class User {
     @Column(name = "country", nullable = false, length = 100)
     private String country;
 
-    @Size(max = 50)
     @NotNull
+    @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false, length = 50)
-    private String status;
+    private CommonStatus status;
 
     @NotNull
     @ColumnDefault("CURRENT_TIMESTAMP")
@@ -87,7 +86,14 @@ public class User {
     @Column(name = "removed_at")
     private Instant removedAt;
 
-    @OneToMany(mappedBy = "user")
-    private Set<Account> accounts = new LinkedHashSet<>();
+    @PrePersist
+    public void prePersist() {
+        createdAt = Instant.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = Instant.now();
+    }
 
 }

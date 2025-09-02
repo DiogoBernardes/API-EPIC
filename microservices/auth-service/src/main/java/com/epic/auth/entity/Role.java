@@ -12,14 +12,11 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * Entidade que representa os diferentes tipos de utilizadores (Ex: Admin, User, Premium).
+ * Entidade que representa roles de utilizadores,
+ * como Admin, User ou Premium.
  * <p>
  * Mapeada para a tabela <code>roles</code> na base de dados.
  * </p>
- *
- * <ul>
- *     <li>Armazena o tipo de roles de utilizadores.</li>
- * </ul>
  *
  * {@code @Diogo Bernardes}
  */
@@ -29,8 +26,9 @@ import java.util.UUID;
 @Entity
 @Table(name = "roles")
 public class Role {
+
     @Id
-    @ColumnDefault("gen_random_uuid()")
+    @GeneratedValue(generator = "UUID")
     @Column(name = "id", nullable = false)
     private UUID id;
 
@@ -49,6 +47,16 @@ public class Role {
 
     @Column(name = "removed_at")
     private Instant removedAt;
+
+    @PrePersist
+    public void prePersist() {
+        createdAt = Instant.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = Instant.now();
+    }
 
     @OneToMany(mappedBy = "role")
     private Set<User> users = new LinkedHashSet<>();

@@ -1,28 +1,29 @@
 package com.epic.shared.security;
 
-import com.epic.shared.dto.UserDto;
+import com.epic.shared.dto.UserInfoDto;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
+
 import java.security.Key;
 import java.util.Date;
 
 /**
- * Classe utilitária para criação, extração e validação de tokens JWT (JSON Web Token).
+ * Utilitário para geração, validação e extração de tokens JWT.
  * <p>
- * É responsável por:
+ * Funcionalidades principais:
  * <ul>
- *     <li>Gerar tokens JWT a partir de informações de um utilizador ({@link UserDto}).</li>
- *     <li>Extrair claims (informações) contidas em um token JWT.</li>
- *     <li>Validar se um token é assinado corretamente e ainda está no prazo de validade.</li>
+ *     <li>Gera tokens JWT a partir de informações de {@link UserInfoDto}.</li>
+ *     <li>Extrai claims de um token JWT.</li>
+ *     <li>Valida se um token é válido e não expirou.</li>
  * </ul>
  * </p>
- *
- * <p>Os tokens são assinados utilizando algoritmo HS256 e uma chave secreta definida
- * nas configurações da aplicação.</p>
  *
  * {@code @Diogo Bernardes}
  */
 
+@Component
 public class JwtUtil {
 
     private final String jwtSecret;
@@ -30,7 +31,8 @@ public class JwtUtil {
     /** Chave criptográfica derivada da chave secreta para assinatura do token. */
     private final Key signingKey;
 
-    public JwtUtil(String jwtSecret, long expirationTime) {
+    public JwtUtil(@Value("${jwt.secret}") String jwtSecret,
+                   @Value("${jwt.expiration}") long expirationTime) {
         this.jwtSecret = jwtSecret;
         this.expirationTime = expirationTime;
         this.signingKey = Keys.hmacShaKeyFor(jwtSecret.getBytes());
@@ -39,19 +41,24 @@ public class JwtUtil {
     /**
      * Gera um token JWT a partir das informações de um utilizador.
      *
-     * @param user objeto {@link UserDto} contem os dados do utilizador.
+     * @param user objeto {@link UserInfoDto} contem os dados do utilizador.
      * @return token JWT gerado.
      */
-    public String generateToken(UserDto user) {
+    public String generateToken(UserInfoDto user) {
         return Jwts.builder()
                 .setSubject(user.getId().toString())
+                .claim("id", user.getId().toString())
                 .claim("email", user.getEmail())
-                .claim("role", user.getRoleId().toString())
+                .claim("firstname", user.getFirstName())
+                .claim("lastname", user.getLastName())
+                .claim("role_id", user.getRoleId().toString())
+                .claim("role", user.getRoleName())
                 .setIssuedAt(new Date())
                 .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
                 .signWith(signingKey, SignatureAlgorithm.HS256)
                 .compact();
     }
+
 
     /**
      * Extrai as claims (informações) de um token JWT.

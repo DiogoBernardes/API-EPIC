@@ -3,13 +3,12 @@ package com.epic.finance.entity;
 import com.vladmihalcea.hibernate.type.array.StringArrayType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.Type;
+
 import java.time.Instant;
 import java.util.UUID;
 
@@ -32,7 +31,7 @@ import java.util.UUID;
 @Table(name = "recurring_settings")
 public class RecurringSetting {
     @Id
-    @ColumnDefault("gen_random_uuid()")
+    @GeneratedValue(generator = "UUID")
     @Column(name = "id", nullable = false)
     private UUID id;
 
@@ -42,7 +41,6 @@ public class RecurringSetting {
     @JoinColumn(name = "transaction_id", nullable = false)
     private Transaction transaction;
 
-    @Size(max = 20)
     @NotNull
     @Column(name = "frequency", nullable = false, length = 20)
     private String frequency;
@@ -56,7 +54,6 @@ public class RecurringSetting {
     private String[] months;
 
     @NotNull
-    @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
@@ -66,4 +63,13 @@ public class RecurringSetting {
     @Column(name = "removed_at")
     private Instant removedAt;
 
+    @PrePersist
+    public void prePersist() {
+        createdAt = Instant.now();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        updatedAt = Instant.now();
+    }
 }

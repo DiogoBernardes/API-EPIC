@@ -3,46 +3,53 @@ package com.epic.auth.controller;
 import com.epic.auth.dto.*;
 import com.epic.auth.entity.User;
 import com.epic.auth.service.AuthService;
-import com.epic.shared.dto.UserDto;
+import com.epic.shared.dto.UserInfoDto;
+import com.epic.shared.security.JwtUtil;
+import io.jsonwebtoken.Claims;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import java.util.UUID;
 
 /**
- * Controlador REST responsável por gerir os endpoints de autenticação e registo dos utilizadores.
+ * Controlador REST responsável pelos endpoints de autenticação, registo e gestão de perfil de utilizadores.
  * <p>
- * Todos os endpoints estão mapeados sob o caminho base <code>/auth</code>.
+ * Todos os endpoints estão sob o caminho base <code>/auth</code> e usam JWT para autenticação.
  * </p>
- *
+ * <p>
+ * Funcionalidades principais:
  * <ul>
- *     <li><b>/login</b>: autenticação e emissão de token JWT.</li>
- *     <li><b>/register</b>: Registo do novo utilizador.</li>
- *     <li><b>/logout</b>: invalidação do token JWT atual.</li>
+ *     <li>Autenticação de utilizadores e emissão de tokens JWT (/login).</li>
+ *     <li>Registo de novos utilizadores (/register).</li>
+ *     <li>Alteração de password de utilizadores autenticados (/user/changePassword).</li>
+ *     <li>Consulta de utilizador por ID ou email (/user/id/{id}, /user/email/{email}).</li>
  * </ul>
+ * </p>
  *
  * {@code @Diogo Bernardes}
  */
 
 @RestController
 @RequestMapping("/auth")
-@Tag(name = "Auth", description = "Autenticação e registo de utilizadores")
+@Tag(name = "Auth", description = "Autenticação, registo e perfil dos utilizadores")
+@SecurityRequirement(name = "bearerAuth")
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtUtil jwtUtil;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, JwtUtil jwtUtil) {
         this.authService = authService;
+        this.jwtUtil = jwtUtil;
     }
 
 
     /**
-     * Endpoint para autenticação do utilizador.
-     * <p>
-     * Recebe email e password, valida as credenciais e retorna um token JWT caso sejam válidas.
-     * </p>
+     * Endpoint para autenticação de utilizador.
      *
-     * @param request objeto {@link LoginRequestDto} que contém o email e a password do utilizador.
-     * @return {@link ResponseEntity} contem o token JWT gerado.
+     * @param request objeto {@link LoginRequestDto} com email e password.
+     * @return {@link ResponseEntity} com token JWT gerado.
      */
     @PostMapping("/login")
     public ResponseEntity<String> login(@RequestBody LoginRequestDto request) {
@@ -51,16 +58,13 @@ public class AuthController {
 
     /**
      * Endpoint para registo de um novo utilizador.
-     * <p>
-     * Recebe os dados do utilizador e senha, cria o utilizador e retorna a entidade criada.
-     * </p>
      *
-     * @param request objeto {@link RegisterRequestDto} que contem as informações do utilizador a ser registado.
-     * @return {@link ResponseEntity} contem o {@link User} criado.
+     * @param request objeto {@link RegisterRequestDto} com dados do utilizador.
+     * @return {@link ResponseEntity} com o {@link User} criado.
      */
     @PostMapping("/register")
     public ResponseEntity<User> register(@RequestBody RegisterRequestDto request) {
-        UserDto dto = UserDto.builder()
+        UserInfoDto dto = UserInfoDto.builder()
                 .roleId(request.getRoleId())
                 .email(request.getEmail())
                 .firstName(request.getFirstName())
@@ -70,5 +74,59 @@ public class AuthController {
                 .build();
 
         return ResponseEntity.ok(authService.register(dto, request.getPassword()));
+    }
+
+    /**
+     * Endpoint para alteração de password de um utilizador autenticado.
+     *
+     * @param authorizationHeader cabeçalho Authorization com o token JWT.
+     * @param oldPassword password atual.
+     * @param newPassword nova password.
+     * @return {@link ResponseEntity} com mensagem de sucesso.
+     */
+    @PutMapping("/user/changePassword")
+    public ResponseEntity<String> changePassword(
+            @RequestHeader("Authorization") String authorizationHeader,
+            @RequestParam("oldPassword") String oldPassword,
+            @RequestParam("newPassword") String newPassword) {
+
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            throw new RuntimeException("User not authenticated!");
+        }
+
+        String token = authorizationHeader.substring(7);
+
+        if (!jwtUtil.validateToken(token)) {
+            throw new RuntimeException("Token invalid or expired");
+        }
+
+        Claims claims = jwtUtil.extractClaims(token);
+        UUID userId = UUID.fromString(claims.get("id", String.class));
+
+        authService.changePassword(userId, oldPassword, newPassword);
+
+        return ResponseEntity.ok("Password updated with success!!");
+    }
+
+    /**
+     * Endpoint para obter utilizador através do ID.
+     *
+     * @param id UUID do utilizador.
+     * @return {@link ResponseEntity} com {@link UserInfoDto}.
+     */
+    @GetMapping("/user/id/{id}")
+    public ResponseEntity<UserInfoDto> getUserById( @PathVariable("id") UUID id) {
+        return ResponseEntity.ok(authService.getUserById(id));
+    }
+
+    /**
+     * Endpoint para obter utilizador através do email.
+     *
+     * @param email e-mail do utilizador.
+     * @return {@link ResponseEntity} com {@link UserInfoDto}.
+     */
+    @GetMapping("/user/email/{email}")
+    public ResponseEntity<UserInfoDto> getUserByEmail(@PathVariable("email") String email) {
+        return ResponseEntity.ok(authService.getUserByEmail(email));
     }
 }

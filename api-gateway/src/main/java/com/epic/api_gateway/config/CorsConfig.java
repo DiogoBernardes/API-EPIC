@@ -1,25 +1,21 @@
 package com.epic.api_gateway.config;
 
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.web.servlet.config.annotation.CorsRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+import org.springframework.web.reactive.config.CorsRegistry;
+import org.springframework.web.reactive.config.WebFluxConfigurer;
 
 /**
- * Configuração de CORS (Cross-Origin Resource Sharing) para o API Gateway.
+ * Configuração global de CORS para o API Gateway.
  * <p>
- * Esta classe define as origens, métodos HTTP e cabeçalhos permitidos nas requisições
- * entre diferentes domínios, além de habilitar o uso de credenciais.
+ * Permite que requisições de diferentes origens acedam à API,
+ * definindo métodos HTTP, cabeçalhos e credenciais permitidos.
  * </p>
  * <p>
- * Configuração aplicada:
+ * Funcionalidades principais:
  * <ul>
- *     <li>Origens permitidas: <a href="http://localhost:8080">API Gateway</a>,  <a href="http://localhost:8081">AI Microservice</a>,
- *      <a href="http://localhost:8082">Auth Microservice</a>,  <a href="http://localhost:8083">Finance Microservice</a>,
- *       <a href="http://localhost:8084">Planner Microservice</a> and  <a href="http://localhost:8085">Report Microservice</a></li>
- *     <li>Métodos permitidos: GET, POST, PUT, DELETE, OPTIONS</li>
- *     <li>Todos os cabeçalhos são permitidos</li>
- *     <li>Uso de credenciais habilitado</li>
+ *     <li>Permite todas as origens.</li>
+ *     <li>Habilita métodos GET, POST, PUT, DELETE e OPTIONS.</li>
+ *     <li>Permite todos os cabeçalhos e envio de credenciais.</li>
  * </ul>
  * </p>
  *
@@ -27,20 +23,14 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  */
 
 @Configuration
-public class CorsConfig {
+public class CorsConfig implements WebFluxConfigurer {
 
-    @Bean
-    public WebMvcConfigurer corsConfigurer() {
-        return new WebMvcConfigurer() {
-            @Override
-            public void addCorsMappings(CorsRegistry registry) {
-                registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:8080", "http://localhost:8081", "http://localhost:8082", "http://localhost:8083",
-                                "http://localhost:8084","http://localhost:8085")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                        .allowedHeaders("*")
-                        .allowCredentials(true);
-            }
-        };
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+                .allowedOriginPatterns("*") //Em Produção não esquecer de alterar para os dominios que vão consumir a API
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedHeaders("*")
+                .allowCredentials(true);
     }
 }
