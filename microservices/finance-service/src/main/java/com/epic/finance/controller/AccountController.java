@@ -3,9 +3,12 @@ package com.epic.finance.controller;
 import com.epic.finance.client.AuthClient;
 import com.epic.finance.dto.account.AccountDto;
 import com.epic.finance.dto.account.CreateAccountDto;
+import com.epic.finance.dto.account.UpdateAccountNameDto;
+import com.epic.finance.dto.account.UpdateAccountStatusDto;
 import com.epic.finance.entity.Account;
 import com.epic.finance.service.AccountService;
 import com.epic.shared.dto.UserInfoDto;
+import com.epic.shared.enums.CommonStatus;
 import com.epic.shared.security.JwtHelper;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
@@ -13,7 +16,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.UUID;
-
 
 /**
  * Controller responsável pela gestão das contas do utilizador.
@@ -26,8 +28,10 @@ import java.util.UUID;
  * Funcionalidades:
  * <ul>
  *     <li>Obter conta específica de um utilizador pelo nome.</li>
- *     <li>Listar todas as contas do utilizador logado.</li>
+ *     <li>Listar todas as contas do utilizador logado, filtrando automaticamente contas eliminadas (soft delete).</li>
  *     <li>Criar uma nova conta para o utilizador logado.</li>
+ *     <li>Atualizar nome ou estado de uma conta.</li>
+ *     <li>Eliminar uma conta de forma lógica (soft delete), marcando o estado como INACTIVE.</li>
  * </ul>
  *
  * {@code @Diogo Bernardes}
@@ -48,6 +52,7 @@ public class AccountController {
      * @param authHeader Cabeçalho Authorization com o token JWT.
      * @param name Nome da conta.
      * @return AccountDto com informações da conta e do utilizador.
+     * @throws AccountNotFoundException se a conta não existir ou estiver eliminada.
      */
     @GetMapping("/{name}")
     public ResponseEntity<AccountDto> getAccount(@RequestHeader("Authorization") String authHeader,
@@ -57,16 +62,20 @@ public class AccountController {
         return ResponseEntity.ok(account);
     }
 
+
     /**
-     * Obter todas as contas do utilizador logado.
+     * Obter todas as contas do utilizador logado, filtrando por estados.
+     * Contas eliminadas (soft delete) não são retornadas.
      *
      * @param authHeader Cabeçalho Authorization com o token JWT.
+     * @param status Status das contas a serem filtradas (default: Active).
      * @return Lista de AccountDto.
      */
     @GetMapping("/accounts")
-    public ResponseEntity<List<AccountDto>> getAccounts(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<List<AccountDto>> getAccounts(@RequestHeader("Authorization") String authHeader,
+                                                        @RequestParam(value = "status", defaultValue = "Active") CommonStatus status) {
         UUID userId = jwtHelper.extractUserId(authHeader);
-        List<AccountDto> accounts = accountService.getUserAccounts(userId);
+        List<AccountDto> accounts = accountService.getUserAccounts(userId, status.toString());
         return ResponseEntity.ok(accounts);
     }
 
@@ -76,6 +85,7 @@ public class AccountController {
      * @param dto Dados da nova conta.
      * @param authHeader Cabeçalho Authorization com o token JWT.
      * @return AccountDto com a conta criada.
+     * @throws ExistingAccountNameException se já existir uma conta com o mesmo nome para o utilizador.
      */
     @PostMapping("/create")
     public ResponseEntity<AccountDto> createAccount(@RequestBody CreateAccountDto dto,
@@ -95,5 +105,84 @@ public class AccountController {
                 .build();
 
         return ResponseEntity.ok(accountDto);
+    }
+
+    /**
+     * Atualiza o nome de uma conta existente.
+     *
+     * @param accountId ID da conta.
+     * @param dto Novo nome da conta.
+     * @param authHeader Cabeçalho Authorization com o token JWT.
+     * @return AccountDto atualizado.
+     * @throws AccountNotFoundException se a conta não pertencer ao utilizador ou não existir.
+     * @throws ExistingAccountNameException se já existir outra conta com o mesmo nome.
+     */
+    @PutMapping("/{id}/name")
+    public ResponseEntity<AccountDto> updateAccountName(@PathVariable("id") UUID accountId,
+                                                        @RequestBody UpdateAccountNameDto dto,
+                                                        @RequestHeader("Authorization") String authHeader) {
+        UUID userId = jwtHelper.extractUserId(authHeader);
+
+        Account updatedAccount = accountService.updateAccountName(accountId, userId, dto);
+
+        UserInfoDto userInfo = authClient.getUserById(userId);
+
+        AccountDto accountDto = AccountDto.builder()
+                .id(updatedAccount.getId())
+                .name(updatedAccount.getName())
+                .balance(updatedAccount.getBalance())
+                .status(updatedAccount.getStatus())
+                .user(userInfo)
+                .build();
+
+        return ResponseEntity.ok(accountDto);
+    }
+
+    /**
+     * Atualiza o estado (status) de uma conta existente.
+     *
+     * @param accountId ID da conta.
+     * @param dto Novo estado da conta.
+     * @param authHeader Cabeçalho Authorization com o token JWT.
+     * @return AccountDto atualizado.
+     * @throws AccountNotFoundException se a conta não pertencer ao utilizador ou não existir.
+     */
+    @PutMapping("/{id}/status")
+    public ResponseEntity<AccountDto> updateAccountStatus(@PathVariable("id") UUID accountId,
+                                                          @RequestBody UpdateAccountStatusDto dto,
+                                                          @RequestHeader("Authorization") String authHeader) {
+        UUID userId = jwtHelper.extractUserId(authHeader);
+
+        Account updatedAccount = accountService.updateAccountStatus(accountId, userId, dto);
+
+        UserInfoDto userInfo = authClient.getUserById(userId);
+
+        AccountDto accountDto = AccountDto.builder()
+                .id(updatedAccount.getId())
+                .name(updatedAccount.getName())
+                .balance(updatedAccount.getBalance())
+                .status(updatedAccount.getStatus())
+                .user(userInfo)
+                .build();
+
+        return ResponseEntity.ok(accountDto);
+    }
+
+    /**
+     * Elimina uma conta de forma lógica (soft delete), marcando o estado como INACTIVE.
+     *
+     * @param accountId ID da conta a ser eliminada.
+     * @param authHeader Cabeçalho Authorization com o token JWT.
+     * @return ResponseEntity sem conteúdo (204).
+     * @throws AccountNotFoundException se a conta não pertencer ao utilizador ou não existir.
+     */
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteAccount(@PathVariable("id") UUID accountId,
+                                              @RequestHeader("Authorization") String authHeader) {
+        UUID userId = jwtHelper.extractUserId(authHeader);
+
+        accountService.deleteAccount(accountId, userId);
+
+        return ResponseEntity.noContent().build();
     }
 }

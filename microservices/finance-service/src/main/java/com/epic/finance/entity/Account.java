@@ -5,6 +5,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.Where;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -20,6 +21,8 @@ import java.util.UUID;
  *     <li>Armazena do tipo de conta associada ao utilizador.</li>
  *     <li>Armazena o saldo da conta.</li>
  *     <li>Inclui status para indicar se a conta está ativa ou inativa.</li>
+ *     <li>Regista timestamps de criação, atualização e remoção (soft delete).</li>
+ *     <li>Filtra pelas contas em que o removed_at é Nulo</li>
  * </ul>
  *
  * {@code @Diogo Bernardes}
@@ -29,6 +32,7 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(name = "accounts")
+@Where(clause = "removed_at IS NULL")
 public class Account {
     @Id
     @GeneratedValue(generator = "UUID")
