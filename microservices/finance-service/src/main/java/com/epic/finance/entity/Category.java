@@ -1,5 +1,6 @@
 package com.epic.finance.entity;
 
+import com.epic.shared.enums.CategoryType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
@@ -43,8 +44,9 @@ public class Category {
     private String name;
 
     @NotNull
+    @Enumerated(EnumType.STRING)
     @Column(name = "type", nullable = false, length = 50)
-    private String type;
+    private CategoryType type;
 
     @OneToMany(mappedBy = "category")
     private Set<Budget> budgets = new LinkedHashSet<>();

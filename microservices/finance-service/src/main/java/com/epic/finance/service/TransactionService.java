@@ -17,16 +17,15 @@ import com.epic.finance.repository.AccountRepository;
 import com.epic.finance.repository.CategoryRepository;
 import com.epic.finance.repository.TransactionRepository;
 import com.epic.shared.dto.UserInfoDto;
+import com.epic.shared.enums.CategoryType;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.UUID;
 
 
@@ -121,6 +120,7 @@ public class TransactionService {
      * @throws AccountNotFoundException  caso a conta não pertença ao utilizador ou não exista.
      * @throws CategoryNotFoundException caso a categoria não pertença ao utilizador ou não exista.
      */
+    @Transactional
     public TransactionDto createTransaction(UUID userId, CreateTransactionDto dto) {
         UserInfoDto userInfo = authClient.getUserById(userId);
 
@@ -139,6 +139,12 @@ public class TransactionService {
                 .description(dto.getDescription())
                 .isRecurring(dto.getIsRecurring().toBoolean())
                 .build();
+
+        if (transaction.getCategory().getType() == CategoryType.Income) {
+            accountRepository.increaseBalance(transaction.getAccount().getId(), userId, transaction.getAmount());
+        } else if (transaction.getCategory().getType() == CategoryType.Expense) {
+            accountRepository.decreaseBalance(transaction.getAccount().getId(), userId, transaction.getAmount());
+        }
 
         Transaction savedTransaction = transactionRepository.save(transaction);
 
@@ -165,11 +171,18 @@ public class TransactionService {
      * @throws AccountNotFoundException     caso a conta informada não exista ou não pertença ao utilizador.
      * @throws CategoryNotFoundException    caso a categoria informada não exista ou não pertença ao utilizador.
      */
+    @Transactional
     public TransactionDto updateTransaction(UUID userId, UUID transactionId, UpdateTransactionDto dto) {
         UserInfoDto userInfo = authClient.getUserById(userId);
 
         Transaction transaction = transactionRepository.findById(transactionId)
                 .orElseThrow(() -> new TransactionNotFoundException("Transaction not found!"));
+
+        if (transaction.getCategory().getType() == CategoryType.Income) {
+            accountRepository.decreaseBalance(transaction.getAccount().getId(), userId, transaction.getAmount());
+        } else if (transaction.getCategory().getType() == CategoryType.Expense) {
+            accountRepository.increaseBalance(transaction.getAccount().getId(), userId, transaction.getAmount());
+        }
 
         if(dto.getAccountId() != null) {
             Account account = accountRepository.findByIdAndUserId(dto.getAccountId(), userId)
@@ -194,6 +207,12 @@ public class TransactionService {
         }
         if (dto.getIsRecurring() != null) {
             transaction.setIsRecurring(dto.getIsRecurring().toBoolean());
+        }
+
+        if (transaction.getCategory().getType() == CategoryType.Income) {
+            accountRepository.increaseBalance(transaction.getAccount().getId(), userId, transaction.getAmount());
+        } else if (transaction.getCategory().getType() == CategoryType.Expense) {
+            accountRepository.decreaseBalance(transaction.getAccount().getId(), userId, transaction.getAmount());
         }
 
         Transaction updatedTransaction = transactionRepository.save(transaction);

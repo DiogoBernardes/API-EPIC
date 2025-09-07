@@ -27,7 +27,7 @@ public class CategoryMapper {
                 .id(category.getId())
                 .user(userInfo)
                 .name(category.getName())
-                .type(category.getType())
+                .type(category.getType().toString())
                 .build();
     }
 }
