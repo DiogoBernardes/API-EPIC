@@ -1,4 +1,4 @@
-package com.epic.finance.repository.account;
+package com.epic.finance.repository;
 
 import com.epic.finance.entity.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -31,7 +31,7 @@ import java.util.UUID;
 @Repository
 public interface AccountRepository extends JpaRepository<Account, UUID> {
 
-    List<Account> findByUserId(UUID userId);
+    Optional<Account> findByIdAndUserId(UUID accountId, UUID userId);
 
     Optional<Account> findByNameAndUserId(String name, UUID userId);
 

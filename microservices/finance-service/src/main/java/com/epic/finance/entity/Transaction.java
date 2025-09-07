@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.ColumnDefault;
+import org.hibernate.annotations.Where;
+
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -23,10 +25,13 @@ import java.util.UUID;
  *
  * {@code @Diogo Bernardes}
  */
-@Getter
-@Setter
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "transactions")
+@Where(clause = "removed_at IS NULL")
 public class Transaction {
     @Id
     @GeneratedValue(generator = "UUID")

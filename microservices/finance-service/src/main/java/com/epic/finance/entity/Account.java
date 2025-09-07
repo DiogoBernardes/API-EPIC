@@ -28,8 +28,10 @@ import java.util.UUID;
  * {@code @Diogo Bernardes}
  */
 
-@Getter
-@Setter
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "accounts")
 @Where(clause = "removed_at IS NULL")

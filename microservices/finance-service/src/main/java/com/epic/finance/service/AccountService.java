@@ -8,7 +8,7 @@ import com.epic.finance.dto.account.UpdateAccountStatusDto;
 import com.epic.finance.entity.Account;
 import com.epic.finance.exception.account.AccountNotFoundException;
 import com.epic.finance.exception.account.ExistingAccountNameException;
-import com.epic.finance.repository.account.AccountRepository;
+import com.epic.finance.repository.AccountRepository;
 import com.epic.shared.dto.UserInfoDto;
 import com.epic.shared.enums.CommonStatus;
 import jakarta.transaction.Transactional;
@@ -106,11 +106,12 @@ public class AccountService {
                     throw new ExistingAccountNameException("There is already an account with that name.");
                 });
 
-        Account account = new Account();
-        account.setUserId(userId);
-        account.setName(dto.getName());
-        account.setBalance(dto.getBalance() != null ? dto.getBalance() : BigDecimal.ZERO);
-        account.setStatus(CommonStatus.Active.toString());
+        Account account = Account.builder()
+                .userId(userId)
+                .name(dto.getName())
+                .balance(dto.getBalance() != null ? dto.getBalance() : BigDecimal.ZERO)
+                .status(CommonStatus.Active.toString())
+                .build();
 
         return accountRepository.save(account);
     }
