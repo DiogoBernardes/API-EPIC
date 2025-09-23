@@ -1,11 +1,7 @@
 package com.epic.finance.dto.transaction;
 
 import com.epic.shared.enums.CommonFlag;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -21,9 +17,6 @@ import java.util.UUID;
  * {@code @Diogo Bernardes}
  */
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 public class UpdateTransactionDto {
     private UUID accountId;
     private UUID categoryId;

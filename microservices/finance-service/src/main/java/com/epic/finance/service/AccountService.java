@@ -54,7 +54,7 @@ public class AccountService {
      *                                  ou se a conta estiver eliminada (soft delete).
      */
     public AccountDto getUserAccount(UUID userId, String name) {
-        Account account = accountRepository.findByNameAndUserId(name, userId)
+        Account account = accountRepository.findByNameAndUserIdAndRemovedAtIsNull(name, userId)
                 .orElseThrow(() -> new AccountNotFoundException("Account not found!"));
 
         UserInfoDto userInfo = authClient.getUserById(userId);
@@ -101,7 +101,7 @@ public class AccountService {
      * @throws ExistingAccountNameException se já existir uma conta com o mesmo nome para o utilizador.
      */
     public Account createAccount(CreateAccountDto dto, UUID userId) {
-        accountRepository.findByNameAndUserId(dto.getName(), userId)
+        accountRepository.findByNameAndUserIdAndRemovedAtIsNull(dto.getName(), userId)
                 .ifPresent(acc -> {
                     throw new ExistingAccountNameException("There is already an account with that name.");
                 });
@@ -134,7 +134,7 @@ public class AccountService {
             throw new AccountNotFoundException("Account not found!");
         }
 
-        accountRepository.findByNameAndUserId(dto.getName(), userId)
+        accountRepository.findByNameAndUserIdAndRemovedAtIsNull(dto.getName(), userId)
                 .ifPresent(acc -> {
                     throw new ExistingAccountNameException("There is already an account with that name.");
                 });

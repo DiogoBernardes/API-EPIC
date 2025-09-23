@@ -35,7 +35,7 @@ public interface AccountRepository extends JpaRepository<Account, UUID> {
 
     Optional<Account> findByIdAndUserId(UUID accountId, UUID userId);
 
-    Optional<Account> findByNameAndUserId(String name, UUID userId);
+    Optional<Account> findByNameAndUserIdAndRemovedAtIsNull(String name, UUID userId);
 
     List<Account> findByStatusAndUserId(String status, UUID userId);
 

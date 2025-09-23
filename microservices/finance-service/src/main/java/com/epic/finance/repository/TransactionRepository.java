@@ -33,6 +33,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     @Query("""
         SELECT t FROM Transaction t
         WHERE t.userId = :userId
+          AND t.removedAt IS NULL
           AND (COALESCE(:accountId, t.account.id) = t.account.id)
           AND (COALESCE(:categoryId, t.category.id) = t.category.id)
           AND (COALESCE(:startDate, t.transactionDate) <= t.transactionDate)

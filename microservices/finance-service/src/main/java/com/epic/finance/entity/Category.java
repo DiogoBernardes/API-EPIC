@@ -3,8 +3,9 @@ package com.epic.finance.entity;
 import com.epic.shared.enums.CategoryType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.Where;
+
 import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -26,8 +27,12 @@ import java.util.UUID;
 
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 @Entity
 @Table(name = "categories")
+@Where(clause = "removed_at IS NULL")
 public class Category {
 
     @Id
