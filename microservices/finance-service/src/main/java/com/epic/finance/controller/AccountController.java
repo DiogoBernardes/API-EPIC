@@ -1,10 +1,7 @@
 package com.epic.finance.controller;
 
 import com.epic.finance.client.AuthClient;
-import com.epic.finance.dto.account.AccountDto;
-import com.epic.finance.dto.account.CreateAccountDto;
-import com.epic.finance.dto.account.UpdateAccountNameDto;
-import com.epic.finance.dto.account.UpdateAccountStatusDto;
+import com.epic.finance.dto.account.*;
 import com.epic.finance.entity.Account;
 import com.epic.finance.service.AccountService;
 import com.epic.shared.dto.UserInfoDto;
@@ -102,6 +99,7 @@ public class AccountController {
                 .balance(account.getBalance())
                 .status(account.getStatus())
                 .user(userInfo)
+                .monthlyBudget(account.getMonthlyBudget())
                 .build();
 
         return ResponseEntity.ok(accountDto);
@@ -117,13 +115,13 @@ public class AccountController {
      * @throws AccountNotFoundException se a conta não pertencer ao utilizador ou não existir.
      * @throws ExistingAccountNameException se já existir outra conta com o mesmo nome.
      */
-    @PutMapping("/{id}/name")
-    public ResponseEntity<AccountDto> updateAccountName(@PathVariable("id") UUID accountId,
-                                                        @RequestBody UpdateAccountNameDto dto,
+    @PutMapping("/update/{accountId}")
+    public ResponseEntity<AccountDto> updateAccountName(@PathVariable("accountId") UUID accountId,
+                                                        @RequestBody UpdateAccountDto dto,
                                                         @RequestHeader("Authorization") String authHeader) {
         UUID userId = jwtHelper.extractUserId(authHeader);
 
-        Account updatedAccount = accountService.updateAccountName(accountId, userId, dto);
+        Account updatedAccount = accountService.updateAccount(accountId, userId, dto);
 
         UserInfoDto userInfo = authClient.getUserById(userId);
 
@@ -138,35 +136,6 @@ public class AccountController {
         return ResponseEntity.ok(accountDto);
     }
 
-    /**
-     * Atualiza o estado (status) de uma conta existente.
-     *
-     * @param accountId ID da conta.
-     * @param dto Novo estado da conta.
-     * @param authHeader Cabeçalho Authorization com o token JWT.
-     * @return AccountDto atualizado.
-     * @throws AccountNotFoundException se a conta não pertencer ao utilizador ou não existir.
-     */
-    @PutMapping("/{id}/status")
-    public ResponseEntity<AccountDto> updateAccountStatus(@PathVariable("id") UUID accountId,
-                                                          @RequestBody UpdateAccountStatusDto dto,
-                                                          @RequestHeader("Authorization") String authHeader) {
-        UUID userId = jwtHelper.extractUserId(authHeader);
-
-        Account updatedAccount = accountService.updateAccountStatus(accountId, userId, dto);
-
-        UserInfoDto userInfo = authClient.getUserById(userId);
-
-        AccountDto accountDto = AccountDto.builder()
-                .id(updatedAccount.getId())
-                .name(updatedAccount.getName())
-                .balance(updatedAccount.getBalance())
-                .status(updatedAccount.getStatus())
-                .user(userInfo)
-                .build();
-
-        return ResponseEntity.ok(accountDto);
-    }
 
     /**
      * Elimina uma conta de forma lógica (soft delete), marcando o estado como INACTIVE.

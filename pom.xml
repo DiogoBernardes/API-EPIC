@@ -30,6 +30,8 @@
         <lombok.version>1.18.26</lombok.version>
         <hibernate-types.version>2.21.1</hibernate-types.version>
         <spring-cloud.version>2023.0.3</spring-cloud.version>
+        <spring-messaging.version>6.2.5</spring-messaging.version>
+        <spring-websocket.version>3.5.3</spring-websocket.version>
     </properties>
 
     <dependencyManagement>
@@ -61,6 +63,18 @@
                 <groupId>org.springdoc</groupId>
                 <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
                 <version>${springdoc.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework</groupId>
+                <artifactId>spring-messaging</artifactId>
+                <version>${spring-messaging.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-websocket</artifactId>
+                <version>${spring-websocket.version}</version>
             </dependency>
 
             <!-- Common Dependencies -->

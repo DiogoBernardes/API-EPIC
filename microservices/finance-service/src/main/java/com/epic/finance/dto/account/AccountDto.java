@@ -29,4 +29,5 @@ public class AccountDto {
     private String name;
     private BigDecimal balance;
     private String status;
+    private BigDecimal monthlyBudget;
 }

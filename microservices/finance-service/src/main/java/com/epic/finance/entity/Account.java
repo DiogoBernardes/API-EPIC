@@ -58,6 +58,9 @@ public class Account {
     @Column(name = "status", nullable = false, length = 50)
     private String status;
 
+    @Column(name = "monthly_budget", precision = 15, scale = 2)
+    private BigDecimal monthlyBudget;
+
     @NotNull
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;

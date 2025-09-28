@@ -25,6 +25,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -44,6 +45,7 @@ import java.util.UUID;
  *     <li>Criar novas transações, garantindo que a conta e categoria pertençam ao utilizador.</li>
  *     <li>Atualizar transações existentes, incluindo alteração de conta ou categoria.</li>
  *     <li>Soft delete de transações, respeitando o campo {@code removedAt} para manter histórico.</li>
+ *      <li>Validação de limites orçamentais e disparo de notificações de alerta/excesso.</li>
  * </ul>
  *
  * {@code @Diogo Bernardes}
@@ -59,6 +61,7 @@ public class TransactionService {
     private final TransactionMapper transactionMapper;
     private final AccountMapper accountMapper;
     private final CategoryMapper categoryMapper;
+    private final NotificationService notificationService;
 
     /**
      * Retorna uma página de transações de um utilizador, com filtros opcionais.
@@ -111,7 +114,8 @@ public class TransactionService {
     /**
      * Cria uma nova transação para um utilizador.
      * <p>
-     * Valida se a conta e a categoria pertencem ao utilizador antes de criar a transação.
+     * Valida se a conta e categoria pertencem ao utilizador antes de persistir a transação.
+     * Após a criação, atualiza o saldo da conta e verifica orçamentos.
      * </p>
      *
      * @param userId ID do utilizador que está criando a transação.
@@ -140,13 +144,12 @@ public class TransactionService {
                 .isRecurring(dto.getIsRecurring().toBoolean())
                 .build();
 
-        if (transaction.getCategory().getType() == CategoryType.Income) {
-            accountRepository.increaseBalance(transaction.getAccount().getId(), userId, transaction.getAmount());
-        } else if (transaction.getCategory().getType() == CategoryType.Expense) {
-            accountRepository.decreaseBalance(transaction.getAccount().getId(), userId, transaction.getAmount());
-        }
+        adjustAccountBalance(account, category, transaction.getAmount(), true);
 
         Transaction savedTransaction = transactionRepository.save(transaction);
+
+        checkBudgetForAccount(account, userId);
+        checkBudgetForCategory(category, userId);
 
         return transactionMapper.toTransactionDto(
                 savedTransaction,
@@ -157,10 +160,10 @@ public class TransactionService {
     }
 
     /**
-     * Atualiza uma transação existente.
+     * Atualiza uma transação existente de um utilizador.
      * <p>
-     * Permite alterar conta, categoria, valor, descrição, data e recorrência da transação.
-     * Valida se a conta e a categoria pertencem ao utilizador.
+     * Permite alterar conta, categoria, valor, descrição, data e recorrência.
+     * Recalcula o saldo da conta conforme as alterações.
      * </p>
      *
      * @param userId        ID do utilizador dono da transação.
@@ -209,11 +212,7 @@ public class TransactionService {
             transaction.setIsRecurring(dto.getIsRecurring().toBoolean());
         }
 
-        if (transaction.getCategory().getType() == CategoryType.Income) {
-            accountRepository.increaseBalance(transaction.getAccount().getId(), userId, transaction.getAmount());
-        } else if (transaction.getCategory().getType() == CategoryType.Expense) {
-            accountRepository.decreaseBalance(transaction.getAccount().getId(), userId, transaction.getAmount());
-        }
+        adjustAccountBalance(transaction.getAccount(), transaction.getCategory(), transaction.getAmount(), true);
 
         Transaction updatedTransaction = transactionRepository.save(transaction);
 
@@ -248,4 +247,105 @@ public class TransactionService {
 
         transactionRepository.softDeleteByIdAndUserId(transactionId, userId);
     }
+
+    /**
+     * Ajusta o saldo de uma conta com base no tipo da categoria e no valor da transação.
+     * <p>
+     * Caso a categoria seja do tipo {@code Income}, o saldo é aumentado no valor da transação.
+     * Caso seja do tipo {@code Expense}, o saldo é reduzido no valor da transação.
+     * O parâmetro {@code increase} controla se a operação é para aplicar ou reverter o impacto.
+     * </p>
+     *
+     * @param account  Conta associada à transação.
+     * @param category Categoria da transação (Income ou Expense).
+     * @param amount   Valor da transação.
+     * @param increase Indica se o saldo deve ser atualizado aplicando (true) ou revertendo (false) o impacto.
+     */
+    private void adjustAccountBalance(Account account, Category category, BigDecimal amount, boolean increase) {
+        if (category.getType() == CategoryType.Income) {
+            if (increase) {
+                accountRepository.increaseBalance(account.getId(), account.getUserId(), amount);
+            } else {
+                accountRepository.decreaseBalance(account.getId(), account.getUserId(), amount);
+            }
+        } else if (category.getType() == CategoryType.Expense) {
+            if (increase) {
+                accountRepository.decreaseBalance(account.getId(), account.getUserId(), amount);
+            } else {
+                accountRepository.increaseBalance(account.getId(), account.getUserId(), amount);
+            }
+        }
+    }
+
+    /**
+     * Verifica o orçamento mensal de uma conta após o registo de uma transação.
+     * <p>
+     * Caso o orçamento seja ultrapassado, envia uma notificação de tipo {@code BUDGET_EXCEEDED}.
+     * Caso o valor remanescente seja menor ou igual a 10% do orçamento, envia uma notificação de tipo {@code BUDGET_WARNING}..
+     * Se a conta não tiver orçamento definido, nada é feito.
+     * </p>
+     *
+     * @param account Conta cuja transação foi registada.
+     * @param userId  ID do utilizador dono da conta.
+     */
+    private void checkBudgetForAccount(Account account, UUID userId) {
+        if (account.getMonthlyBudget() == null) return;
+
+        BigDecimal spentThisMonth = transactionRepository.getSpentThisMonthForAccount(account.getId());
+        BigDecimal remaining = account.getMonthlyBudget().subtract(spentThisMonth);
+        BigDecimal warningThreshold = account.getMonthlyBudget().multiply(BigDecimal.valueOf(0.10));
+
+        if (remaining.compareTo(BigDecimal.ZERO) < 0) {
+            notificationService.sendNotification(
+                    userId,
+                    "BUDGET_EXCEEDED",
+                    "You have exceeded your account " + account.getName() +
+                            " budget in " + remaining.abs() + "€."
+            );
+        } else if (remaining.compareTo(warningThreshold) <= 0) {
+            notificationService.sendNotification(
+                    userId,
+                    "BUDGET_WARNING",
+                    "You are almost reaching your account " + account.getName() +
+                            " budget. Remains " + remaining + "€."
+            );
+        }
+    }
+
+    /**
+     * Verifica o orçamento mensal de uma categoria após o registo de uma transação.
+     * <p>
+     * Caso o orçamento seja ultrapassado, envia uma notificação de tipo {@code BUDGET_EXCEEDED}.
+     * Caso o valor remanescente seja menor ou igual a 10% do orçamento, envia uma notificação de tipo {@code BUDGET_WARNING}.
+     * Se a categoria não tiver orçamento definido, nada é feito.
+     * </p>
+     *
+     * @param category Categoria cuja transação foi registada.
+     * @param userId   ID do utilizador dono da categoria.
+     */
+    private void checkBudgetForCategory(Category category, UUID userId) {
+        if (category.getMonthlyBudget() == null) return;
+
+        BigDecimal spentThisMonth = transactionRepository.getSpentThisMonthForCategory(category.getId());
+        BigDecimal remaining = category.getMonthlyBudget().subtract(spentThisMonth);
+        BigDecimal warningThreshold = category.getMonthlyBudget().multiply(BigDecimal.valueOf(0.10));
+
+        if (remaining.compareTo(BigDecimal.ZERO) < 0) {
+            notificationService.sendNotification(
+                    userId,
+                    "BUDGET_EXCEEDED",
+                    "You have exceeded the budget for category " + category.getName() +
+                            " in " + remaining.abs() + "€."
+            );
+        } else if (remaining.compareTo(warningThreshold) <= 0) {
+            notificationService.sendNotification(
+                    userId,
+                    "BUDGET_WARNING",
+                    "You are almost at category " + category.getName() +
+                            " budget limit. Remains " + remaining + "€."
+            );
+        }
+    }
+
+
 }

@@ -21,4 +21,5 @@ public class CreateAccountDto {
     private String name;
     private BigDecimal balance = BigDecimal.valueOf(0.0);
     private CommonStatus status;
+    private BigDecimal monthlyBudget;
 }

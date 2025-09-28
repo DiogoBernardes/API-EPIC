@@ -1,13 +1,12 @@
 package com.epic.finance.service;
 
 import com.epic.finance.client.AuthClient;
-import com.epic.finance.dto.account.AccountDto;
-import com.epic.finance.dto.account.CreateAccountDto;
-import com.epic.finance.dto.account.UpdateAccountNameDto;
-import com.epic.finance.dto.account.UpdateAccountStatusDto;
+import com.epic.finance.dto.account.*;
 import com.epic.finance.entity.Account;
+import com.epic.finance.entity.Category;
 import com.epic.finance.exception.account.AccountNotFoundException;
 import com.epic.finance.exception.account.ExistingAccountNameException;
+import com.epic.finance.exception.transaction.CategoryNotFoundException;
 import com.epic.finance.repository.AccountRepository;
 import com.epic.shared.dto.UserInfoDto;
 import com.epic.shared.enums.CommonStatus;
@@ -117,16 +116,16 @@ public class AccountService {
     }
 
     /**
-     * Atualiza o nome de uma conta existente.
+     * Atualiza os dados de uma conta existente .
      *
      * @param accountId ID da conta a ser atualizada.
      * @param userId ID do utilizador dono da conta.
-     * @param dto DTO contendo o novo nome da conta.
+     * @param dto DTO contendo os novos dados da conta.
      * @return Account atualizada.
      * @throws AccountNotFoundException se a conta não existir ou pertencer a outro utilizador.
      * @throws ExistingAccountNameException se já existir uma outra conta com o mesmo nome.
      */
-    public Account updateAccountName(UUID accountId, UUID userId, UpdateAccountNameDto dto) {
+    public Account updateAccount(UUID accountId, UUID userId, UpdateAccountDto dto) {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new AccountNotFoundException("Account not found!"));
 
@@ -134,37 +133,27 @@ public class AccountService {
             throw new AccountNotFoundException("Account not found!");
         }
 
-        accountRepository.findByNameAndUserIdAndRemovedAtIsNull(dto.getName(), userId)
-                .ifPresent(acc -> {
-                    throw new ExistingAccountNameException("There is already an account with that name.");
-                });
-
-        account.setName(dto.getName());
-
-        return accountRepository.save(account);
-    }
-
-    /**
-     * Atualiza o estado (status) de uma conta existente.
-     *
-     * @param accountId ID da conta a ser atualizada.
-     * @param userId ID do utilizador dono da conta.
-     * @param dto DTO contendo o novo status da conta.
-     * @return Account atualizada.
-     * @throws AccountNotFoundException se a conta não existir ou pertencer a outro utilizador.
-     */
-    public Account updateAccountStatus(UUID accountId, UUID userId, UpdateAccountStatusDto dto) {
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException("Account not found!"));
-
-        if(!account.getUserId().equals(userId)) {
-            throw new AccountNotFoundException("Account not found!");
+        if (dto.getName() != null) {
+            accountRepository.findByNameAndUserIdAndRemovedAtIsNull(dto.getName(), userId)
+                    .ifPresent(acc -> {
+                        if (!acc.getId().equals(accountId)) {
+                            throw new ExistingAccountNameException("There is already an account with that name.");
+                        }
+                    });
+            account.setName(dto.getName());
         }
 
-        account.setStatus(dto.getStatus().toString());
+        if(dto.getStatus() != null) {
+            account.setStatus(dto.getStatus().toString());
+        }
+
+        if(dto.getMonthlyBudget() != null) {
+            account.setMonthlyBudget(dto.getMonthlyBudget());
+        }
 
         return accountRepository.save(account);
     }
+    
 
     /**
      * Elimina uma conta de forma lógica (soft delete).

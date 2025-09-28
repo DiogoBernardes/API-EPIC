@@ -3,6 +3,8 @@ package com.epic.finance.dto.category;
 import com.epic.shared.enums.CategoryType;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 /**
  * DTO utilizado para receber os dados necessários
  * para o registo de uma nova categoria.
@@ -17,4 +19,5 @@ import lombok.Data;
 public class CreateCategoryDto {
     private String name;
     private CategoryType type;
+    private BigDecimal monthlyBudget;
 }

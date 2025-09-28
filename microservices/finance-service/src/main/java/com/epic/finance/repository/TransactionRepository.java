@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.UUID;
 
@@ -25,6 +26,7 @@ import java.util.UUID;
  *     <li>Obter transações de um utilizador com filtros opcionais por conta, categoria e intervalo de datas.</li>
  *     <li>Permitir paginação e ordenação através de {@link Pageable}.</li>
  *     <li>Aplicar soft delete em transações, definindo o campo {@code removedAt}.</li>
+ *      <li>Calcular total gasto no mês corrente por conta ou categoria.</li>
  * </ul>
  * {@code @Diogo Bernardes}
  */
@@ -46,5 +48,21 @@ public interface TransactionRepository extends JpaRepository<Transaction, UUID> 
     @Modifying
     @Query("UPDATE Transaction t SET t.removedAt = CURRENT_TIMESTAMP WHERE t.id = :id AND t.userId = :userId")
     void softDeleteByIdAndUserId(@Param("id") UUID id, @Param("userId") UUID userId);
+
+    @Query("SELECT COALESCE(SUM(t.amount), 0) " +
+            "FROM Transaction t " +
+            "WHERE t.account.id = :accountId " +
+            "AND t.category.type = 'Expense' " +
+            "AND t.removedAt IS NULL " +
+            "AND t.transactionDate >= FUNCTION('date_trunc', 'month', CURRENT_DATE)")
+    BigDecimal getSpentThisMonthForAccount(UUID accountId);
+
+    @Query("SELECT COALESCE(SUM(t.amount), 0) " +
+            "FROM Transaction t " +
+            "WHERE t.category.id = :categoryId " +
+            "AND t.category.type = 'Expense' " +
+            "AND t.removedAt IS NULL " +
+            "AND t.transactionDate >= FUNCTION('date_trunc', 'month', CURRENT_DATE)")
+    BigDecimal getSpentThisMonthForCategory(UUID categoryId);
 
 }

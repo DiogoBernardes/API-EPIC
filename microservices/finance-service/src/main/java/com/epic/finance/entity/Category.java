@@ -6,6 +6,7 @@ import jakarta.validation.constraints.NotNull;
 import lombok.*;
 import org.hibernate.annotations.Where;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -53,8 +54,8 @@ public class Category {
     @Column(name = "type", nullable = false, length = 50)
     private CategoryType type;
 
-    @OneToMany(mappedBy = "category")
-    private Set<Budget> budgets = new LinkedHashSet<>();
+    @Column(name = "monthly_budget", precision = 15, scale = 2)
+    private BigDecimal monthlyBudget;
 
     @OneToMany(mappedBy = "category")
     private Set<Transaction> transactions = new LinkedHashSet<>();
